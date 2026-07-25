@@ -13,12 +13,12 @@ import {
 // Troque os valores abaixo pelos do SEU projeto Firebase.
 // ============================================================
 const firebaseConfig = {
-  apiKey: "COLE_AQUI",
-  authDomain: "COLE_AQUI.firebaseapp.com",
-  projectId: "COLE_AQUI",
-  storageBucket: "COLE_AQUI.appspot.com",
-  messagingSenderId: "COLE_AQUI",
-  appId: "COLE_AQUI"
+  apiKey: "AIzaSyBdpwpPwPrFrjF6vJ6qqwmffiSRGCDcYOI",
+  authDomain: "saas-rpg.firebaseapp.com",
+  projectId: "saas-rpg",
+  storageBucket: "saas-rpg.firebasestorage.app",
+  messagingSenderId: "766714058039",
+  appId: "1:766714058039:web:0ce4f37fe8f281b92876b2"
 };
 
 const app = initializeApp(firebaseConfig);
