@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function logado() { return request.auth != null; }
+
+    function ehMestre(grupoId) {
+      return get(/databases/$(database)/documents/grupos/$(grupoId)).data.mestreId == request.auth.uid;
+    }
+
+    function ehMembro(grupoId) {
+      return exists(/databases/$(database)/documents/grupos/$(grupoId)/membros/$(request.auth.uid));
+    }
+
+    match /usuarios/{uid} {
+      allow read: if logado();
+      allow write: if logado() && request.auth.uid == uid;
+    }
+
+    match /grupos/{grupoId} {
+      allow read: if logado();
+      allow create: if logado() && request.resource.data.mestreId == request.auth.uid;
+      allow update, delete: if logado() && ehMestre(grupoId);
+
+      match /membros/{uid} {
+        allow read: if logado() && ehMembro(grupoId);
+        // o próprio usuário cria seu registro de membro ao entrar (jogador)
+        // ou o mestre já cria o dele ao criar o grupo
+        allow create: if logado() && request.auth.uid == uid;
+        allow update, delete: if logado() && ehMestre(grupoId);
+      }
+
+      match /fichas/{uid} {
+        allow read: if logado() && ehMembro(grupoId);
+        // jogador cria a própria ficha vazia só na primeira entrada no grupo
+        allow create: if logado() && request.auth.uid == uid;
+        // só o mestre edita depois disso (evita trapaça)
+        allow update, delete: if logado() && ehMestre(grupoId);
+      }
+
+      match /itens/{itemId} {
+        allow read: if logado() && ehMembro(grupoId);
+        allow create, update, delete: if logado() && ehMestre(grupoId);
+      }
+    }
+  }
+}

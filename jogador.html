@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minha Ficha — Fichas RPG</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Fichas RPG</div>
+  <div class="userinfo">
+    <a href="grupos.html">← Meus grupos</a>
+    <span id="nome-usuario"></span>
+    <button class="secondary" id="btn-sair">Sair</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1 id="nome-grupo">Carregando...</h1>
+  <p class="muted">Somente o mestre pode editar sua ficha e inventário.</p>
+
+  <div class="panel">
+    <div class="row between">
+      <h2 id="f-nome" style="margin:0">—</h2>
+      <span class="badge jogador" id="f-classe-nivel"></span>
+    </div>
+
+    <div class="grid grid-2" style="margin-top:16px">
+      <div>
+        <label>Pontos de Vida</label>
+        <div class="hp-bar"><div class="fill" id="pv-fill"></div></div>
+        <p class="muted" id="pv-texto" style="margin:4px 0 0"></p>
+      </div>
+      <div>
+        <label>Pontos de Mana/Energia</label>
+        <div class="hp-bar"><div class="fill" id="pm-fill" style="background:var(--gold)"></div></div>
+        <p class="muted" id="pm-texto" style="margin:4px 0 0"></p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3>Atributos</h3>
+    <div class="grid grid-3" id="grid-atributos"></div>
+
+    <div class="divider"></div>
+
+    <h3>Anotações</h3>
+    <p id="f-anotacoes" class="muted"></p>
+  </div>
+
+  <div class="panel">
+    <h3>Inventário</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Qtd.</th><th>Peso</th><th>Descrição</th></tr></thead>
+      <tbody id="tabela-inventario"></tbody>
+    </table>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db, onAuthStateChanged, signOut, doc, getDoc, getDocs, collection } from "./js/firebase-config.js";
+
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(window.location.search);
+const grupoId = params.get("grupo");
+if (!grupoId) window.location.href = "grupos.html";
+
+const ATRIBUTOS = [
+  ["forca", "Força"], ["destreza", "Destreza"], ["constituicao", "Constituição"],
+  ["inteligencia", "Inteligência"], ["sabedoria", "Sabedoria"], ["carisma", "Carisma"]
+];
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = "index.html"; return; }
+  $("nome-usuario").textContent = user.displayName || user.email;
+
+  const grupoSnap = await getDoc(doc(db, "grupos", grupoId));
+  if (!grupoSnap.exists()) { window.location.href = "grupos.html"; return; }
+  $("nome-grupo").textContent = grupoSnap.data().nome;
+
+  const fichaSnap = await getDoc(doc(db, "grupos", grupoId, "fichas", user.uid));
+  const ficha = fichaSnap.exists() ? fichaSnap.data() : null;
+  if (!ficha) return;
+
+  $("f-nome").textContent = ficha.nome || "Sem nome";
+  $("f-classe-nivel").textContent = `${ficha.classe || "Sem classe"} · Nível ${ficha.nivel || 1}`;
+
+  $("pv-fill").style.width = pct(ficha.pv, ficha.pvMax) + "%";
+  $("pv-texto").textContent = `${ficha.pv ?? 0} / ${ficha.pvMax ?? 0}`;
+  $("pm-fill").style.width = pct(ficha.pm, ficha.pmMax) + "%";
+  $("pm-texto").textContent = `${ficha.pm ?? 0} / ${ficha.pmMax ?? 0}`;
+
+  const atr = ficha.atributos || {};
+  const grid = $("grid-atributos");
+  grid.innerHTML = ATRIBUTOS.map(([chave, label]) => `
+    <div class="card"><div class="muted" style="font-size:.75rem;text-transform:uppercase">${label}</div>
+    <div style="font-family:var(--font-display);font-size:1.4rem">${atr[chave] ?? "—"}</div></div>
+  `).join("");
+
+  $("f-anotacoes").textContent = ficha.anotacoes || "Nenhuma anotação.";
+
+  // inventário — busca nomes dos itens no catálogo do grupo
+  const itensSnap = await getDocs(collection(db, "grupos", grupoId, "itens"));
+  const catalogo = {};
+  itensSnap.forEach((d) => catalogo[d.id] = d.data());
+
+  const inventario = ficha.inventario || [];
+  const tbody = $("tabela-inventario");
+  if (inventario.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="muted">Inventário vazio.</td></tr>';
+  } else {
+    tbody.innerHTML = inventario.map((e) => {
+      const item = catalogo[e.itemId];
+      if (!item) return `<tr><td colspan="4" class="muted">(item removido do catálogo)</td></tr>`;
+      return `<tr>
+        <td>${escapeHtml(item.nome)}</td>
+        <td>${e.quantidade}</td>
+        <td>${item.peso ?? 0}</td>
+        <td class="muted">${escapeHtml(item.descricao || "")}</td>
+      </tr>`;
+    }).join("");
+  }
+});
+
+$("btn-sair").addEventListener("click", async () => { await signOut(auth); window.location.href = "index.html"; });
+
+function pct(v, max) { if (!max) return 0; return Math.max(0, Math.min(100, (v / max) * 100)); }
+function escapeHtml(str) { const d = document.createElement("div"); d.textContent = str ?? ""; return d.innerHTML; }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mestre — Fichas RPG</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Fichas RPG</div>
+  <div class="userinfo">
+    <a href="grupos.html">← Meus grupos</a>
+    <span id="nome-usuario"></span>
+    <button class="secondary" id="btn-sair">Sair</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1 id="nome-grupo">Carregando...</h1>
+  <p class="muted">Código de convite: <strong id="codigo-grupo">—</strong> · você é o mestre — só você edita fichas e itens.</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="personagens">Personagens</div>
+    <div class="tab" data-tab="itens">Itens (catálogo)</div>
+  </div>
+
+  <!-- ABA PERSONAGENS -->
+  <div id="tab-personagens">
+    <div id="lista-personagens" class="grid grid-2"></div>
+
+    <div class="panel" id="editor-ficha" style="display:none">
+      <div class="row between">
+        <h2 id="editor-titulo">Ficha</h2>
+        <button class="secondary" id="btn-fechar-ficha">Fechar</button>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="field"><label>Nome</label><input id="f-nome"></div>
+        <div class="field"><label>Classe</label><input id="f-classe"></div>
+        <div class="field"><label>Nível</label><input id="f-nivel" type="number" min="1"></div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="field"><label>PV atual / máximo</label>
+          <div class="row"><input id="f-pv" type="number"><span>/</span><input id="f-pvmax" type="number"></div>
+        </div>
+        <div class="field"><label>PM atual / máximo</label>
+          <div class="row"><input id="f-pm" type="number"><span>/</span><input id="f-pmmax" type="number"></div>
+        </div>
+      </div>
+
+      <h3>Atributos</h3>
+      <div class="grid grid-3" id="grid-atributos"></div>
+
+      <div class="field"><label>Anotações do mestre / histórico</label><textarea id="f-anotacoes"></textarea></div>
+
+      <button id="btn-salvar-ficha">Salvar ficha</button>
+      <div class="success" id="msg-salvar-ficha"></div>
+
+      <div class="divider"></div>
+
+      <h3>Inventário</h3>
+      <div class="row">
+        <select id="select-item" style="flex:1"></select>
+        <input id="qtd-item" type="number" min="1" value="1" style="width:80px">
+        <button id="btn-add-item">Adicionar</button>
+      </div>
+      <table style="margin-top:12px">
+        <thead><tr><th>Item</th><th>Qtd.</th><th></th></tr></thead>
+        <tbody id="tabela-inventario"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ABA ITENS -->
+  <div id="tab-itens" style="display:none">
+    <div class="panel">
+      <h3>Criar item</h3>
+      <div class="grid grid-2">
+        <div class="field"><label>Nome</label><input id="i-nome"></div>
+        <div class="field"><label>Tipo</label><input id="i-tipo" placeholder="Arma, poção, artefato..."></div>
+        <div class="field"><label>Peso</label><input id="i-peso" type="number" step="0.1"></div>
+        <div class="field"><label>Valor (moedas)</label><input id="i-valor" type="number" step="0.01"></div>
+      </div>
+      <div class="field"><label>Descrição</label><textarea id="i-descricao"></textarea></div>
+      <button id="btn-criar-item">Criar item</button>
+      <div class="error" id="erro-item"></div>
+    </div>
+
+    <div id="lista-itens" class="grid grid-2"></div>
+  </div>
+</div>
+
+<script type="module">
+import {
+  auth, db, onAuthStateChanged, signOut,
+  doc, getDoc, updateDoc, deleteDoc,
+  collection, addDoc, getDocs, onSnapshot, serverTimestamp
+} from "./js/firebase-config.js";
+
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(window.location.search);
+const grupoId = params.get("grupo");
+
+if (!grupoId) window.location.href = "grupos.html";
+
+let usuarioAtual = null;
+let itensCatalogo = [];
+let fichaAtualUid = null;
+let inventarioAtual = [];
+
+const ATRIBUTOS = [
+  ["forca", "Força"], ["destreza", "Destreza"], ["constituicao", "Constituição"],
+  ["inteligencia", "Inteligência"], ["sabedoria", "Sabedoria"], ["carisma", "Carisma"]
+];
+
+// monta os campos de atributos
+const gridAtr = $("grid-atributos");
+ATRIBUTOS.forEach(([chave, label]) => {
+  const div = document.createElement("div");
+  div.className = "field";
+  div.innerHTML = `<label>${label}</label><input type="number" id="attr-${chave}">`;
+  gridAtr.appendChild(div);
+});
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = "index.html"; return; }
+  usuarioAtual = user;
+  $("nome-usuario").textContent = user.displayName || user.email;
+
+  const grupoSnap = await getDoc(doc(db, "grupos", grupoId));
+  if (!grupoSnap.exists() || grupoSnap.data().mestreId !== user.uid) {
+    alert("Você não é o mestre deste grupo.");
+    window.location.href = "grupos.html";
+    return;
+  }
+  $("nome-grupo").textContent = grupoSnap.data().nome;
+  $("codigo-grupo").textContent = grupoSnap.data().codigo;
+
+  carregarPersonagens();
+  carregarItens();
+});
+
+$("btn-sair").addEventListener("click", async () => { await signOut(auth); window.location.href = "index.html"; });
+
+// abas
+document.querySelectorAll(".tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    $("tab-personagens").style.display = tab.dataset.tab === "personagens" ? "block" : "none";
+    $("tab-itens").style.display = tab.dataset.tab === "itens" ? "block" : "none";
+  });
+});
+
+// ---------- PERSONAGENS ----------
+async function carregarPersonagens() {
+  const lista = $("lista-personagens");
+  const membrosSnap = await getDocs(collection(db, "grupos", grupoId, "membros"));
+  const jogadores = membrosSnap.docs.filter((m) => m.data().papel === "jogador");
+
+  if (jogadores.length === 0) {
+    lista.innerHTML = '<div class="empty">Nenhum jogador entrou no grupo ainda. Compartilhe o código de convite.</div>';
+    return;
+  }
+
+  lista.innerHTML = "";
+  for (const membro of jogadores) {
+    const fichaSnap = await getDoc(doc(db, "grupos", grupoId, "fichas", membro.id));
+    const ficha = fichaSnap.exists() ? fichaSnap.data() : { nome: membro.data().nome, pv: 0, pvMax: 0 };
+    const div = document.createElement("div");
+    div.className = "card clickable";
+    div.innerHTML = `
+      <h3 style="margin:0">${escapeHtml(ficha.nome || membro.data().nome)}</h3>
+      <p class="muted" style="margin:6px 0">${escapeHtml(ficha.classe || "Sem classe")} · Nível ${ficha.nivel || 1}</p>
+      <div class="hp-bar"><div class="fill" style="width:${pct(ficha.pv, ficha.pvMax)}%"></div></div>
+      <p class="muted" style="margin:6px 0 0">PV ${ficha.pv ?? 0}/${ficha.pvMax ?? 0}</p>
+    `;
+    div.addEventListener("click", () => abrirFicha(membro.id));
+    lista.appendChild(div);
+  }
+}
+
+function pct(v, max) { if (!max) return 0; return Math.max(0, Math.min(100, (v / max) * 100)); }
+
+async function abrirFicha(uid) {
+  fichaAtualUid = uid;
+  const fichaSnap = await getDoc(doc(db, "grupos", grupoId, "fichas", uid));
+  const ficha = fichaSnap.exists() ? fichaSnap.data() : {};
+
+  $("editor-titulo").textContent = "Ficha de " + (ficha.nome || "personagem");
+  $("f-nome").value = ficha.nome || "";
+  $("f-classe").value = ficha.classe || "";
+  $("f-nivel").value = ficha.nivel ?? 1;
+  $("f-pv").value = ficha.pv ?? 0;
+  $("f-pvmax").value = ficha.pvMax ?? 0;
+  $("f-pm").value = ficha.pm ?? 0;
+  $("f-pmmax").value = ficha.pmMax ?? 0;
+  $("f-anotacoes").value = ficha.anotacoes || "";
+
+  const atr = ficha.atributos || {};
+  ATRIBUTOS.forEach(([chave]) => { $("attr-" + chave).value = atr[chave] ?? 10; });
+
+  inventarioAtual = ficha.inventario || [];
+  renderInventario();
+  atualizarSelectItens();
+
+  $("msg-salvar-ficha").textContent = "";
+  $("editor-ficha").style.display = "block";
+  $("editor-ficha").scrollIntoView({ behavior: "smooth" });
+}
+
+$("btn-fechar-ficha").addEventListener("click", () => { $("editor-ficha").style.display = "none"; fichaAtualUid = null; });
+
+$("btn-salvar-ficha").addEventListener("click", async () => {
+  if (!fichaAtualUid) return;
+  const atributos = {};
+  ATRIBUTOS.forEach(([chave]) => { atributos[chave] = Number($("attr-" + chave).value) || 0; });
+
+  const dados = {
+    nome: $("f-nome").value.trim(),
+    classe: $("f-classe").value.trim(),
+    nivel: Number($("f-nivel").value) || 1,
+    pv: Number($("f-pv").value) || 0,
+    pvMax: Number($("f-pvmax").value) || 0,
+    pm: Number($("f-pm").value) || 0,
+    pmMax: Number($("f-pmmax").value) || 0,
+    atributos,
+    anotacoes: $("f-anotacoes").value,
+    inventario: inventarioAtual
+  };
+
+  await updateDoc(doc(db, "grupos", grupoId, "fichas", fichaAtualUid), dados);
+  $("msg-salvar-ficha").textContent = "Ficha salva.";
+  carregarPersonagens();
+  setTimeout(() => $("msg-salvar-ficha").textContent = "", 2000);
+});
+
+// ---------- INVENTÁRIO ----------
+function atualizarSelectItens() {
+  const select = $("select-item");
+  select.innerHTML = itensCatalogo.map((i) => `<option value="${i.id}">${escapeHtml(i.nome)}</option>`).join("");
+}
+
+$("btn-add-item").addEventListener("click", () => {
+  const itemId = $("select-item").value;
+  const qtd = Number($("qtd-item").value) || 1;
+  if (!itemId) return;
+
+  const existente = inventarioAtual.find((e) => e.itemId === itemId);
+  if (existente) existente.quantidade += qtd;
+  else inventarioAtual.push({ itemId, quantidade: qtd });
+
+  renderInventario();
+});
+
+function renderInventario() {
+  const tbody = $("tabela-inventario");
+  if (inventarioAtual.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" class="muted">Inventário vazio.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = inventarioAtual.map((entrada, idx) => {
+    const item = itensCatalogo.find((i) => i.id === entrada.itemId);
+    const nome = item ? item.nome : "(item removido do catálogo)";
+    return `<tr>
+      <td>${escapeHtml(nome)}</td>
+      <td><input type="number" min="1" value="${entrada.quantidade}" data-idx="${idx}" class="qtd-inline" style="width:70px"></td>
+      <td><button class="danger secondary" data-remover="${idx}">Remover</button></td>
+    </tr>`;
+  }).join("");
+
+  tbody.querySelectorAll(".qtd-inline").forEach((inp) => {
+    inp.addEventListener("change", (e) => {
+      const idx = Number(e.target.dataset.idx);
+      inventarioAtual[idx].quantidade = Number(e.target.value) || 1;
+    });
+  });
+  tbody.querySelectorAll("[data-remover]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const idx = Number(e.target.dataset.remover);
+      inventarioAtual.splice(idx, 1);
+      renderInventario();
+    });
+  });
+}
+
+// ---------- ITENS (CATÁLOGO) ----------
+async function carregarItens() {
+  onSnapshot(collection(db, "grupos", grupoId, "itens"), (snap) => {
+    itensCatalogo = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderListaItens();
+    atualizarSelectItens();
+    if (fichaAtualUid) renderInventario();
+  });
+}
+
+function renderListaItens() {
+  const lista = $("lista-itens");
+  if (itensCatalogo.length === 0) {
+    lista.innerHTML = '<div class="empty">Nenhum item criado ainda.</div>';
+    return;
+  }
+  lista.innerHTML = itensCatalogo.map((i) => `
+    <div class="card">
+      <div class="row between">
+        <h3 style="margin:0">${escapeHtml(i.nome)}</h3>
+        <button class="danger secondary" data-del="${i.id}">Excluir</button>
+      </div>
+      <p class="muted" style="margin:6px 0">${escapeHtml(i.tipo || "Sem tipo")} · Peso ${i.peso ?? 0} · Valor ${i.valor ?? 0}</p>
+      <p style="margin:0">${escapeHtml(i.descricao || "")}</p>
+    </div>
+  `).join("");
+
+  lista.querySelectorAll("[data-del]").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      if (!confirm("Excluir este item do catálogo? Ele será removido apenas do catálogo, não dos inventários já salvos.")) return;
+      await deleteDoc(doc(db, "grupos", grupoId, "itens", e.target.dataset.del));
+    });
+  });
+}
+
+$("btn-criar-item").addEventListener("click", async () => {
+  const nome = $("i-nome").value.trim();
+  $("erro-item").textContent = "";
+  if (!nome) { $("erro-item").textContent = "Dê um nome ao item."; return; }
+
+  await addDoc(collection(db, "grupos", grupoId, "itens"), {
+    nome,
+    tipo: $("i-tipo").value.trim(),
+    peso: Number($("i-peso").value) || 0,
+    valor: Number($("i-valor").value) || 0,
+    descricao: $("i-descricao").value.trim(),
+    criadoEm: serverTimestamp()
+  });
+
+  $("i-nome").value = ""; $("i-tipo").value = ""; $("i-peso").value = ""; $("i-valor").value = ""; $("i-descricao").value = "";
+});
+
+function escapeHtml(str) {
+  const d = document.createElement("div");
+  d.textContent = str ?? "";
+  return d.innerHTML;
+}
+</script>
+
+</body>
+</html>
