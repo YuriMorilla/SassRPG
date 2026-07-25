@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mestre — Fichas RPG</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Fichas RPG</div>
+  <div class="userinfo">
+    <a href="grupos.html">← Meus grupos</a>
+    <span id="nome-usuario"></span>
+    <button class="secondary" id="btn-sair">Sair</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1 id="nome-grupo">Carregando...</h1>
+  <p class="muted">Código de convite: <strong id="codigo-grupo">—</strong> · você é o mestre — só você edita fichas e itens.</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="personagens">Personagens</div>
+    <div class="tab" data-tab="itens">Itens (catálogo)</div>
+  </div>
+
+  <!-- ABA PERSONAGENS -->
+  <div id="tab-personagens">
+    <div id="lista-personagens" class="grid grid-2"></div>
+
+    <div class="panel" id="editor-ficha" style="display:none">
+      <div class="row between">
+        <h2 id="editor-titulo">Ficha</h2>
+        <button class="secondary" id="btn-fechar-ficha">Fechar</button>
+      </div>
+
+      <div class="field" style="max-width:320px">
+        <label>Tipo de ficha</label>
+        <select id="f-tipo"></select>
+      </div>
+
+      <div id="editor-dnd" class="folha-dnd">
+      <!-- CABEÇALHO -->
+      <div class="ficha-cabecalho">
+        <div class="field"><label>Nome do personagem</label><input id="f-nome" style="font-size:1.1rem"></div>
+        <div class="grid grid-3">
+          <div class="field"><label>Classe e nível</label><input id="f-classe" placeholder="Ex: Guerreiro"></div>
+          <div class="field"><label>Nível</label><input id="f-nivel" type="number" min="1"></div>
+          <div class="field"><label>Antecedente</label><input id="f-antecedente"></div>
+          <div class="field"><label>Nome do jogador</label><input id="f-jogador"></div>
+          <div class="field"><label>Raça</label><input id="f-raca"></div>
+          <div class="field"><label>Tendência</label><input id="f-tendencia" placeholder="Ex: Leal e Bom"></div>
+        </div>
+        <div class="field" style="max-width:220px"><label>Pontos de experiência</label><input id="f-experiencia" type="number" min="0"></div>
+      </div>
+
+      <div class="grid grid-3">
+        <!-- COLUNA ATRIBUTOS -->
+        <div>
+          <div class="grid" id="grid-atributos" style="grid-template-columns:1fr; gap:10px"></div>
+          <div class="field" style="margin-top:14px">
+            <label>Bônus de proficiência</label>
+            <input id="f-bonusprof" type="number">
+          </div>
+          <div class="row" style="margin-top:6px">
+            <input type="checkbox" id="f-inspiracao" style="width:18px;height:18px">
+            <label style="margin:0">Inspiração</label>
+          </div>
+        </div>
+
+        <!-- COLUNA SALVAGUARDAS E PERICIAS -->
+        <div>
+          <h3>Testes de Resistência</h3>
+          <div class="lista-check" id="lista-salvaguardas"></div>
+          <div class="divider"></div>
+          <h3>Perícias</h3>
+          <div class="lista-check" id="lista-pericias"></div>
+          <div class="divider"></div>
+          <div class="stat-caixa">
+            <label style="margin:0">Sabedoria Passiva (Percepção)</label>
+            <div class="valor" id="passiva-percepcao">10</div>
+          </div>
+        </div>
+
+        <!-- COLUNA COMBATE -->
+        <div>
+          <div class="grid grid-3">
+            <div class="field"><label>CA</label><input id="f-ca" type="number"></div>
+            <div class="field"><label>Iniciativa</label><input id="f-iniciativa" type="number"></div>
+            <div class="field"><label>Deslocamento</label><input id="f-desloc" type="number"></div>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="field"><label>PV atuais</label><input id="f-pv" type="number"></div>
+            <div class="field"><label>PV máximos</label><input id="f-pvmax" type="number"></div>
+          </div>
+          <div class="field"><label>PV temporários</label><input id="f-pvtemp" type="number"></div>
+          <div class="field"><label>Dados de vida</label><input id="f-dadosvida" placeholder="Ex: 3d8"></div>
+
+          <label>Testes contra a morte</label>
+          <div class="row between" style="margin-bottom:14px">
+            <div class="row">Sucessos <div class="morte-marcas" id="morte-sucesso"></div></div>
+            <div class="row">Fracassos <div class="morte-marcas" id="morte-fracasso"></div></div>
+          </div>
+
+          <label>Ataques e magias</label>
+          <div id="lista-ataques"></div>
+          <button class="secondary" id="btn-add-ataque" style="margin-top:6px">+ Adicionar ataque</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="grid grid-2">
+        <div class="field"><label>Traços de Personalidade</label><textarea id="f-tracos"></textarea></div>
+        <div class="field"><label>Ideais</label><textarea id="f-ideais"></textarea></div>
+        <div class="field"><label>Ligações</label><textarea id="f-ligacoes"></textarea></div>
+        <div class="field"><label>Defeitos</label><textarea id="f-defeitos"></textarea></div>
+      </div>
+      <div class="field"><label>Outras proficiências e idiomas</label><textarea id="f-outrasprof"></textarea></div>
+      <div class="field"><label>Anotações do mestre</label><textarea id="f-anotacoes"></textarea></div>
+      </div>
+
+      <div id="editor-generico" style="display:none">
+        <div class="grid grid-3">
+          <div class="field"><label>Nome</label><input id="g-nome"></div>
+          <div class="field"><label>Classe/Papel</label><input id="g-classe"></div>
+          <div class="field"><label>Nível</label><input id="g-nivel" type="number" min="1"></div>
+        </div>
+        <div class="grid grid-2">
+          <div class="field"><label>PV atual / máximo</label>
+            <div class="row"><input id="g-pv" type="number"><span>/</span><input id="g-pvmax" type="number"></div>
+          </div>
+          <div class="field"><label>PM/Energia atual / máximo</label>
+            <div class="row"><input id="g-pm" type="number"><span>/</span><input id="g-pmmax" type="number"></div>
+          </div>
+        </div>
+        <h3>Atributos</h3>
+        <div class="grid grid-3" id="grid-atributos-generico"></div>
+        <div class="field"><label>Anotações</label><textarea id="g-anotacoes"></textarea></div>
+      </div>
+
+      <button id="btn-salvar-ficha">Salvar ficha</button>
+      <div class="success" id="msg-salvar-ficha"></div>
+
+      <div class="divider"></div>
+
+      <h3>Inventário</h3>
+      <div class="row">
+        <select id="select-item" style="flex:1"></select>
+        <input id="qtd-item" type="number" min="1" value="1" style="width:80px">
+        <button id="btn-add-item">Adicionar</button>
+      </div>
+      <table style="margin-top:12px">
+        <thead><tr><th>Item</th><th>Qtd.</th><th></th></tr></thead>
+        <tbody id="tabela-inventario"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ABA ITENS -->
+  <div id="tab-itens" style="display:none">
+    <div class="panel">
+      <h3>Criar item</h3>
+      <div class="grid grid-2">
+        <div class="field"><label>Nome</label><input id="i-nome"></div>
+        <div class="field"><label>Tipo</label><input id="i-tipo" placeholder="Arma, poção, artefato..."></div>
+        <div class="field"><label>Peso</label><input id="i-peso" type="number" step="0.1"></div>
+        <div class="field"><label>Valor (moedas)</label><input id="i-valor" type="number" step="0.01"></div>
+      </div>
+      <div class="field"><label>Descrição</label><textarea id="i-descricao"></textarea></div>
+      <button id="btn-criar-item">Criar item</button>
+      <div class="error" id="erro-item"></div>
+    </div>
+
+    <div id="lista-itens" class="grid grid-2"></div>
+  </div>
+</div>
+
+<script type="module">
+import {
+  auth, db, onAuthStateChanged, signOut,
+  doc, getDoc, updateDoc, deleteDoc,
+  collection, addDoc, getDocs, onSnapshot, serverTimestamp
+} from "./firebase-config.js";
+import { ATRIBUTOS, PERICIAS, TIPOS_FICHA, modificador, formatMod, fichaVazia } from "./dnd-dados.js";
+
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(window.location.search);
+const grupoId = params.get("grupo");
+if (!grupoId) window.location.href = "grupos.html";
+
+let usuarioAtual = null;
+let itensCatalogo = [];
+let fichaAtualUid = null;
+let inventarioAtual = [];
+let ataquesAtuais = [];
+
+$("f-tipo").innerHTML = TIPOS_FICHA.map((t) => `<option value="${t.id}">${t.nome}</option>`).join("");
+$("f-tipo").addEventListener("change", () => mostrarEditorTipo($("f-tipo").value));
+
+function mostrarEditorTipo(tipo) {
+  $("editor-dnd").style.display = tipo === "generico" ? "none" : "block";
+  $("editor-generico").style.display = tipo === "generico" ? "block" : "none";
+}
+
+const gridAtrGenerico = $("grid-atributos-generico");
+ATRIBUTOS.forEach(([chave, label]) => {
+  const div = document.createElement("div");
+  div.className = "field";
+  div.innerHTML = `<label>${label}</label><input type="number" id="gattr-${chave}">`;
+  gridAtrGenerico.appendChild(div);
+});
+
+// ---------- monta blocos dinâmicos da ficha ----------
+const gridAtr = $("grid-atributos");
+ATRIBUTOS.forEach(([chave, label]) => {
+  const div = document.createElement("div");
+  div.className = "atributo-caixa";
+  div.innerHTML = `
+    <label>${label}</label>
+    <div class="mod" id="mod-${chave}">+0</div>
+    <input type="number" id="attr-${chave}" min="1" max="30">
+  `;
+  gridAtr.appendChild(div);
+  document.addEventListener("input", (e) => {
+    if (e.target.id === `attr-${chave}`) atualizarCalculos();
+  });
+});
+
+const listaSalva = $("lista-salvaguardas");
+ATRIBUTOS.forEach(([chave, label]) => {
+  const div = document.createElement("div");
+  div.className = "linha-check";
+  div.innerHTML = `
+    <input type="checkbox" id="salva-${chave}">
+    <span class="bonus" id="bonus-salva-${chave}">+0</span>
+    <span class="nome-pericia">${label}</span>
+  `;
+  listaSalva.appendChild(div);
+});
+listaSalva.addEventListener("change", atualizarCalculos);
+
+const listaPer = $("lista-pericias");
+PERICIAS.forEach(([chave, label, atributo]) => {
+  const div = document.createElement("div");
+  div.className = "linha-check";
+  div.innerHTML = `
+    <input type="checkbox" id="per-${chave}">
+    <span class="bonus" id="bonus-per-${chave}">+0</span>
+    <span class="nome-pericia">${label}</span>
+    <span class="atributo-tag">${label.length ? "" : ""}(${atributo.slice(0,3)})</span>
+  `;
+  listaPer.appendChild(div);
+});
+listaPer.addEventListener("change", atualizarCalculos);
+
+for (const id of ["morte-sucesso", "morte-fracasso"]) {
+  const cont = $(id);
+  for (let i = 0; i < 3; i++) {
+    const inp = document.createElement("input");
+    inp.type = "checkbox";
+    inp.dataset.idx = i;
+    cont.appendChild(inp);
+  }
+}
+
+function atualizarCalculos() {
+  const bp = Number($("f-bonusprof").value) || 0;
+  const scores = {};
+  ATRIBUTOS.forEach(([chave]) => {
+    const score = Number($("attr-" + chave).value) || 10;
+    scores[chave] = score;
+    const mod = modificador(score);
+    $("mod-" + chave).textContent = formatMod(mod);
+  });
+
+  ATRIBUTOS.forEach(([chave]) => {
+    const prof = $("salva-" + chave).checked;
+    const mod = modificador(scores[chave]) + (prof ? bp : 0);
+    $("bonus-salva-" + chave).textContent = formatMod(mod);
+  });
+
+  PERICIAS.forEach(([chave, , atributo]) => {
+    const prof = $("per-" + chave).checked;
+    const mod = modificador(scores[atributo]) + (prof ? bp : 0);
+    $("bonus-per-" + chave).textContent = formatMod(mod);
+  });
+
+  const percBonus = modificador(scores.sabedoria) + ($("per-percepcao").checked ? bp : 0);
+  $("passiva-percepcao").textContent = 10 + percBonus;
+}
+$("f-bonusprof").addEventListener("input", atualizarCalculos);
+
+function renderAtaques() {
+  const cont = $("lista-ataques");
+  cont.innerHTML = "";
+  ataquesAtuais.forEach((at, idx) => {
+    const div = document.createElement("div");
+    div.className = "ataque-linha";
+    div.innerHTML = `
+      <input placeholder="Nome" value="${escapeAttr(at.nome)}" data-campo="nome" data-idx="${idx}">
+      <input placeholder="Bônus" value="${escapeAttr(at.bonus)}" data-campo="bonus" data-idx="${idx}">
+      <input placeholder="Dano/Tipo" value="${escapeAttr(at.dano)}" data-campo="dano" data-idx="${idx}">
+      <button class="danger secondary" data-remover-ataque="${idx}">Remover</button>
+    `;
+    cont.appendChild(div);
+  });
+  cont.querySelectorAll("input").forEach((inp) => {
+    inp.addEventListener("input", (e) => {
+      ataquesAtuais[Number(e.target.dataset.idx)][e.target.dataset.campo] = e.target.value;
+    });
+  });
+  cont.querySelectorAll("[data-remover-ataque]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      ataquesAtuais.splice(Number(e.target.dataset.removerAtaque), 1);
+      renderAtaques();
+    });
+  });
+}
+$("btn-add-ataque").addEventListener("click", () => {
+  ataquesAtuais.push({ nome: "", bonus: "", dano: "" });
+  renderAtaques();
+});
+
+// ---------- autenticação e grupo ----------
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = "index.html"; return; }
+  usuarioAtual = user;
+  $("nome-usuario").textContent = user.displayName || user.email;
+
+  const grupoSnap = await getDoc(doc(db, "grupos", grupoId));
+  if (!grupoSnap.exists() || grupoSnap.data().mestreId !== user.uid) {
+    alert("Você não é o mestre deste grupo.");
+    window.location.href = "grupos.html";
+    return;
+  }
+  $("nome-grupo").textContent = grupoSnap.data().nome;
+  $("codigo-grupo").textContent = grupoSnap.data().codigo;
+
+  carregarPersonagens();
+  carregarItens();
+});
+
+$("btn-sair").addEventListener("click", async () => { await signOut(auth); window.location.href = "index.html"; });
+
+document.querySelectorAll(".tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    $("tab-personagens").style.display = tab.dataset.tab === "personagens" ? "block" : "none";
+    $("tab-itens").style.display = tab.dataset.tab === "itens" ? "block" : "none";
+  });
+});
+
+// ---------- PERSONAGENS ----------
+async function carregarPersonagens() {
+  const lista = $("lista-personagens");
+  const membrosSnap = await getDocs(collection(db, "grupos", grupoId, "membros"));
+  const jogadores = membrosSnap.docs.filter((m) => m.data().papel === "jogador");
+
+  if (jogadores.length === 0) {
+    lista.innerHTML = '<div class="empty">Nenhum jogador entrou no grupo ainda. Compartilhe o código de convite.</div>';
+    return;
+  }
+
+  lista.innerHTML = "";
+  for (const membro of jogadores) {
+    const fichaSnap = await getDoc(doc(db, "grupos", grupoId, "fichas", membro.id));
+    const ficha = fichaSnap.exists() ? fichaSnap.data() : fichaVazia(membro.data().nome);
+    const div = document.createElement("div");
+    div.className = "card clickable";
+    div.innerHTML = `
+      <h3 style="margin:0">${escapeHtml(ficha.nome || membro.data().nome)}</h3>
+      <p class="muted" style="margin:6px 0">${escapeHtml(ficha.classe || "Sem classe")} · Nível ${ficha.nivel || 1}</p>
+      <div class="hp-bar"><div class="fill" style="width:${pct(ficha.pv, ficha.pvMax)}%"></div></div>
+      <p class="muted" style="margin:6px 0 0">PV ${ficha.pv ?? 0}/${ficha.pvMax ?? 0}</p>
+    `;
+    div.addEventListener("click", () => abrirFicha(membro.id));
+    lista.appendChild(div);
+  }
+}
+
+function pct(v, max) { if (!max) return 0; return Math.max(0, Math.min(100, (v / max) * 100)); }
+
+async function abrirFicha(uid) {
+  fichaAtualUid = uid;
+  const fichaSnap = await getDoc(doc(db, "grupos", grupoId, "fichas", uid));
+  const ficha = fichaSnap.exists() ? fichaSnap.data() : fichaVazia("Personagem");
+  const tipo = ficha.tipo || "dnd5e";
+
+  $("editor-titulo").textContent = "Ficha de " + (ficha.nome || "personagem");
+  $("f-tipo").value = tipo;
+  mostrarEditorTipo(tipo);
+
+  if (tipo === "generico") {
+    $("g-nome").value = ficha.nome || "";
+    $("g-classe").value = ficha.classe || "";
+    $("g-nivel").value = ficha.nivel ?? 1;
+    $("g-pv").value = ficha.pv ?? 0;
+    $("g-pvmax").value = ficha.pvMax ?? 0;
+    $("g-pm").value = ficha.pm ?? 0;
+    $("g-pmmax").value = ficha.pmMax ?? 0;
+    const atrG = ficha.atributos || {};
+    ATRIBUTOS.forEach(([chave]) => { $("gattr-" + chave).value = atrG[chave] ?? 10; });
+    $("g-anotacoes").value = ficha.anotacoes || "";
+
+    inventarioAtual = ficha.inventario || [];
+    renderInventario();
+    atualizarSelectItens();
+    $("msg-salvar-ficha").textContent = "";
+    $("editor-ficha").style.display = "block";
+    $("editor-ficha").scrollIntoView({ behavior: "smooth" });
+    return;
+  }
+
+  $("f-nome").value = ficha.nome || "";
+  $("f-classe").value = ficha.classe || "";
+  $("f-nivel").value = ficha.nivel ?? 1;
+  $("f-antecedente").value = ficha.antecedente || "";
+  $("f-jogador").value = ficha.jogador || "";
+  $("f-raca").value = ficha.raca || "";
+  $("f-tendencia").value = ficha.tendencia || "";
+  $("f-experiencia").value = ficha.experiencia ?? 0;
+
+  const atr = ficha.atributos || {};
+  ATRIBUTOS.forEach(([chave]) => { $("attr-" + chave).value = atr[chave] ?? 10; });
+
+  $("f-bonusprof").value = ficha.bonusProficiencia ?? 2;
+  $("f-inspiracao").checked = !!ficha.inspiracao;
+
+  const salva = ficha.salvaguardas || {};
+  ATRIBUTOS.forEach(([chave]) => { $("salva-" + chave).checked = !!salva[chave]; });
+
+  const per = ficha.pericias || {};
+  PERICIAS.forEach(([chave]) => { $("per-" + chave).checked = !!per[chave]; });
+
+  $("f-ca").value = ficha.ca ?? 10;
+  $("f-iniciativa").value = ficha.iniciativa ?? 0;
+  $("f-desloc").value = ficha.deslocamento ?? 9;
+  $("f-pv").value = ficha.pv ?? 0;
+  $("f-pvmax").value = ficha.pvMax ?? 0;
+  $("f-pvtemp").value = ficha.pvTemp ?? 0;
+  $("f-dadosvida").value = ficha.dadosVida || "";
+
+  marcarMortes("morte-sucesso", ficha.mortesSucesso || 0);
+  marcarMortes("morte-fracasso", ficha.mortesFracasso || 0);
+
+  ataquesAtuais = (ficha.ataques || []).map((a) => ({ ...a }));
+  renderAtaques();
+
+  $("f-tracos").value = ficha.tracos || "";
+  $("f-ideais").value = ficha.ideais || "";
+  $("f-ligacoes").value = ficha.ligacoes || "";
+  $("f-defeitos").value = ficha.defeitos || "";
+  $("f-outrasprof").value = ficha.outrasProficiencias || "";
+  $("f-anotacoes").value = ficha.anotacoes || "";
+
+  inventarioAtual = ficha.inventario || [];
+  renderInventario();
+  atualizarSelectItens();
+  atualizarCalculos();
+
+  $("msg-salvar-ficha").textContent = "";
+  $("editor-ficha").style.display = "block";
+  $("editor-ficha").scrollIntoView({ behavior: "smooth" });
+}
+
+function marcarMortes(id, qtd) {
+  $(id).querySelectorAll("input").forEach((inp, i) => { inp.checked = i < qtd; });
+}
+function contarMortes(id) {
+  return [...$(id).querySelectorAll("input")].filter((i) => i.checked).length;
+}
+
+$("btn-fechar-ficha").addEventListener("click", () => { $("editor-ficha").style.display = "none"; fichaAtualUid = null; });
+
+$("btn-salvar-ficha").addEventListener("click", async () => {
+  if (!fichaAtualUid) return;
+  const tipo = $("f-tipo").value;
+
+  if (tipo === "generico") {
+    const atributosG = {};
+    ATRIBUTOS.forEach(([chave]) => { atributosG[chave] = Number($("gattr-" + chave).value) || 10; });
+    const dadosG = {
+      tipo: "generico",
+      nome: $("g-nome").value.trim(),
+      classe: $("g-classe").value.trim(),
+      nivel: Number($("g-nivel").value) || 1,
+      pv: Number($("g-pv").value) || 0,
+      pvMax: Number($("g-pvmax").value) || 0,
+      pm: Number($("g-pm").value) || 0,
+      pmMax: Number($("g-pmmax").value) || 0,
+      atributos: atributosG,
+      anotacoes: $("g-anotacoes").value,
+      inventario: inventarioAtual
+    };
+    await updateDoc(doc(db, "grupos", grupoId, "fichas", fichaAtualUid), dadosG);
+    $("msg-salvar-ficha").textContent = "Ficha salva.";
+    carregarPersonagens();
+    setTimeout(() => $("msg-salvar-ficha").textContent = "", 2000);
+    return;
+  }
+
+  const atributos = {};
+  ATRIBUTOS.forEach(([chave]) => { atributos[chave] = Number($("attr-" + chave).value) || 10; });
+
+  const salvaguardas = {};
+  ATRIBUTOS.forEach(([chave]) => { salvaguardas[chave] = $("salva-" + chave).checked; });
+
+  const pericias = {};
+  PERICIAS.forEach(([chave]) => { pericias[chave] = $("per-" + chave).checked; });
+
+  const dados = {
+    tipo: "dnd5e",
+    nome: $("f-nome").value.trim(),
+    classe: $("f-classe").value.trim(),
+    nivel: Number($("f-nivel").value) || 1,
+    antecedente: $("f-antecedente").value.trim(),
+    jogador: $("f-jogador").value.trim(),
+    raca: $("f-raca").value.trim(),
+    tendencia: $("f-tendencia").value.trim(),
+    experiencia: Number($("f-experiencia").value) || 0,
+    atributos,
+    bonusProficiencia: Number($("f-bonusprof").value) || 2,
+    inspiracao: $("f-inspiracao").checked,
+    salvaguardas,
+    pericias,
+    ca: Number($("f-ca").value) || 10,
+    iniciativa: Number($("f-iniciativa").value) || 0,
+    deslocamento: Number($("f-desloc").value) || 9,
+    pv: Number($("f-pv").value) || 0,
+    pvMax: Number($("f-pvmax").value) || 0,
+    pvTemp: Number($("f-pvtemp").value) || 0,
+    dadosVida: $("f-dadosvida").value.trim(),
+    mortesSucesso: contarMortes("morte-sucesso"),
+    mortesFracasso: contarMortes("morte-fracasso"),
+    ataques: ataquesAtuais,
+    tracos: $("f-tracos").value,
+    ideais: $("f-ideais").value,
+    ligacoes: $("f-ligacoes").value,
+    defeitos: $("f-defeitos").value,
+    outrasProficiencias: $("f-outrasprof").value,
+    anotacoes: $("f-anotacoes").value,
+    inventario: inventarioAtual
+  };
+
+  await updateDoc(doc(db, "grupos", grupoId, "fichas", fichaAtualUid), dados);
+  $("msg-salvar-ficha").textContent = "Ficha salva.";
+  carregarPersonagens();
+  setTimeout(() => $("msg-salvar-ficha").textContent = "", 2000);
+});
+
+// ---------- INVENTÁRIO ----------
+function atualizarSelectItens() {
+  const select = $("select-item");
+  select.innerHTML = itensCatalogo.map((i) => `<option value="${i.id}">${escapeHtml(i.nome)}</option>`).join("");
+}
+
+$("btn-add-item").addEventListener("click", () => {
+  const itemId = $("select-item").value;
+  const qtd = Number($("qtd-item").value) || 1;
+  if (!itemId) return;
+  const existente = inventarioAtual.find((e) => e.itemId === itemId);
+  if (existente) existente.quantidade += qtd;
+  else inventarioAtual.push({ itemId, quantidade: qtd });
+  renderInventario();
+});
+
+function renderInventario() {
+  const tbody = $("tabela-inventario");
+  if (inventarioAtual.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" class="muted">Inventário vazio.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = inventarioAtual.map((entrada, idx) => {
+    const item = itensCatalogo.find((i) => i.id === entrada.itemId);
+    const nome = item ? item.nome : "(item removido do catálogo)";
+    return `<tr>
+      <td>${escapeHtml(nome)}</td>
+      <td><input type="number" min="1" value="${entrada.quantidade}" data-idx="${idx}" class="qtd-inline" style="width:70px"></td>
+      <td><button class="danger secondary" data-remover="${idx}">Remover</button></td>
+    </tr>`;
+  }).join("");
+
+  tbody.querySelectorAll(".qtd-inline").forEach((inp) => {
+    inp.addEventListener("change", (e) => {
+      inventarioAtual[Number(e.target.dataset.idx)].quantidade = Number(e.target.value) || 1;
+    });
+  });
+  tbody.querySelectorAll("[data-remover]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      inventarioAtual.splice(Number(e.target.dataset.remover), 1);
+      renderInventario();
+    });
+  });
+}
+
+// ---------- ITENS (CATÁLOGO) ----------
+function carregarItens() {
+  onSnapshot(collection(db, "grupos", grupoId, "itens"), (snap) => {
+    itensCatalogo = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderListaItens();
+    atualizarSelectItens();
+    if (fichaAtualUid) renderInventario();
+  });
+}
+
+function renderListaItens() {
+  const lista = $("lista-itens");
+  if (itensCatalogo.length === 0) {
+    lista.innerHTML = '<div class="empty">Nenhum item criado ainda.</div>';
+    return;
+  }
+  lista.innerHTML = itensCatalogo.map((i) => `
+    <div class="card">
+      <div class="row between">
+        <h3 style="margin:0">${escapeHtml(i.nome)}</h3>
+        <button class="danger secondary" data-del="${i.id}">Excluir</button>
+      </div>
+      <p class="muted" style="margin:6px 0">${escapeHtml(i.tipo || "Sem tipo")} · Peso ${i.peso ?? 0} · Valor ${i.valor ?? 0}</p>
+      <p style="margin:0">${escapeHtml(i.descricao || "")}</p>
+    </div>
+  `).join("");
+
+  lista.querySelectorAll("[data-del]").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      if (!confirm("Excluir este item do catálogo?")) return;
+      await deleteDoc(doc(db, "grupos", grupoId, "itens", e.target.dataset.del));
+    });
+  });
+}
+
+$("btn-criar-item").addEventListener("click", async () => {
+  const nome = $("i-nome").value.trim();
+  $("erro-item").textContent = "";
+  if (!nome) { $("erro-item").textContent = "Dê um nome ao item."; return; }
+
+  await addDoc(collection(db, "grupos", grupoId, "itens"), {
+    nome,
+    tipo: $("i-tipo").value.trim(),
+    peso: Number($("i-peso").value) || 0,
+    valor: Number($("i-valor").value) || 0,
+    descricao: $("i-descricao").value.trim(),
+    criadoEm: serverTimestamp()
+  });
+
+  $("i-nome").value = ""; $("i-tipo").value = ""; $("i-peso").value = ""; $("i-valor").value = ""; $("i-descricao").value = "";
+});
+
+function escapeHtml(str) { const d = document.createElement("div"); d.textContent = str ?? ""; return d.innerHTML; }
+function escapeAttr(str) { return escapeHtml(str).replace(/"/g, "&quot;"); }
+</script>
+
+</body>
+</html>
