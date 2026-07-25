@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Entrar — Fichas RPG</title>
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -43,10 +43,9 @@
 import {
   auth, onAuthStateChanged, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, updateProfile, db, doc, setDoc, serverTimestamp
-} from "./js/firebase-config.js";
+} from "./firebase-config.js";
 
 let modoCadastro = false;
-
 const $ = (id) => document.getElementById(id);
 
 $("troca-link").addEventListener("click", (e) => {
@@ -65,10 +64,7 @@ $("btn-acao").addEventListener("click", async () => {
   const senha = $("senha").value;
   $("erro").textContent = "";
 
-  if (!email || !senha) {
-    $("erro").textContent = "Preencha e-mail e senha.";
-    return;
-  }
+  if (!email || !senha) { $("erro").textContent = "Preencha e-mail e senha."; return; }
 
   try {
     if (modoCadastro) {
@@ -76,9 +72,7 @@ $("btn-acao").addEventListener("click", async () => {
       if (!nome) { $("erro").textContent = "Informe seu nome."; return; }
       const cred = await createUserWithEmailAndPassword(auth, email, senha);
       await updateProfile(cred.user, { displayName: nome });
-      await setDoc(doc(db, "usuarios", cred.user.uid), {
-        nome, email, criadoEm: serverTimestamp()
-      });
+      await setDoc(doc(db, "usuarios", cred.user.uid), { nome, email, criadoEm: serverTimestamp() });
     } else {
       await signInWithEmailAndPassword(auth, email, senha);
     }
@@ -100,9 +94,7 @@ function traduzErro(code) {
   return mapa[code] || "Ocorreu um erro. Tente novamente.";
 }
 
-onAuthStateChanged(auth, (user) => {
-  if (user) window.location.href = "grupos.html";
-});
+onAuthStateChanged(auth, (user) => { if (user) window.location.href = "grupos.html"; });
 </script>
 
 </body>

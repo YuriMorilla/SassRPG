@@ -32,7 +32,7 @@ h1{ letter-spacing:.03em; }
 
 a{ color: var(--gold); }
 
-.wrap{ max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; }
+.wrap{ max-width: 1080px; margin: 0 auto; padding: 32px 20px 80px; }
 
 .topbar{
   display:flex; align-items:center; justify-content:space-between;
@@ -53,7 +53,9 @@ a{ color: var(--gold); }
 .grid{ display:grid; gap: 16px; }
 .grid-2{ grid-template-columns: repeat(2, 1fr); }
 .grid-3{ grid-template-columns: repeat(3, 1fr); }
-@media (max-width: 700px){ .grid-2, .grid-3{ grid-template-columns: 1fr; } }
+.grid-4{ grid-template-columns: repeat(4, 1fr); }
+.grid-6{ grid-template-columns: repeat(6, 1fr); }
+@media (max-width: 800px){ .grid-2, .grid-3, .grid-4, .grid-6{ grid-template-columns: repeat(2,1fr); } }
 
 label{ display:block; font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color: var(--ink-dim); margin-bottom:4px; }
 
@@ -138,3 +140,75 @@ th{ color: var(--ink-dim); font-weight:600; font-size:.75rem; text-transform:upp
 .auth-box .sub{ text-align:center; color: var(--ink-dim); margin-bottom: 24px; font-size:.85rem; }
 
 .empty{ text-align:center; padding: 40px 20px; color: var(--ink-dim); }
+
+/* ---------- FICHA D&D ---------- */
+.ficha-cabecalho{
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+.ficha-cabecalho .nome-personagem{
+  font-family: var(--font-display); font-size: 1.6rem; color: var(--gold); margin-bottom: 10px;
+}
+
+.atributo-caixa{
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 10px;
+  text-align: center;
+}
+.atributo-caixa label{ margin-bottom: 8px; }
+.atributo-caixa .mod{ font-family: var(--font-display); font-size: 1.6rem; color: var(--gold); line-height:1; }
+.atributo-caixa .score{ font-size: .8rem; color: var(--ink-dim); margin-top: 4px; }
+.atributo-caixa input{ text-align:center; margin-top:8px; }
+
+.stat-caixa{
+  background: var(--bg-alt); border:1px solid var(--border); border-radius: var(--radius);
+  padding: 12px; text-align:center;
+}
+.stat-caixa .valor{ font-family: var(--font-display); font-size:1.4rem; color: var(--gold); }
+
+.lista-check{ display:flex; flex-direction:column; gap:6px; }
+.linha-check{
+  display:flex; align-items:center; gap:8px; font-size:.88rem; padding: 3px 0;
+}
+.linha-check input[type=checkbox]{ width:16px; height:16px; accent-color: var(--gold); flex-shrink:0; }
+.linha-check .bonus{ width: 34px; text-align:right; color: var(--gold); font-weight:600; font-family: var(--font-display); }
+.linha-check .atributo-tag{ color: var(--ink-dim); font-size:.72rem; }
+.linha-check .nome-pericia{ flex:1; }
+
+.morte-marcas{ display:flex; gap:8px; }
+.morte-marcas input[type=checkbox]{ width:16px; height:16px; accent-color: var(--blood-bright); }
+
+.ataque-linha{ display:grid; grid-template-columns: 2fr 1fr 1.5fr auto; gap:8px; align-items:center; margin-bottom:8px; }
+@media (max-width: 700px){ .ataque-linha{ grid-template-columns: 1fr; } }
+
+/* ---------- TEMA PERGAMINHO (ficha D&D) ---------- */
+.folha-dnd{
+  --panel: #ece0c4;
+  --bg-alt: #f7efd9;
+  --border: #a9895f;
+  --ink: #2c2013;
+  --ink-dim: #6b5738;
+  --gold: #8a5a24;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255,255,255,.25), transparent 40%),
+    #e9dcb8;
+  color: var(--ink);
+  border: 2px solid #7a5a30;
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: inset 0 0 0 4px #f4e9c8, inset 0 0 0 6px #7a5a30;
+}
+.folha-dnd h1, .folha-dnd h2, .folha-dnd h3{ color: #5a3c1a; font-family: var(--font-display); }
+.folha-dnd .muted{ color: var(--ink-dim); }
+.folha-dnd .ficha-cabecalho{ background: var(--bg-alt); border-color: var(--border); }
+.folha-dnd .nome-personagem{ color: #5a3c1a; }
+.folha-dnd select{ background: var(--bg-alt); }
+.folha-dnd button:not(.secondary):not(.danger){ border-color: #7a5a30; color: #5a3c1a; }
+.folha-dnd button:not(.secondary):not(.danger):hover{ background: #7a5a30; color: #f7efd9; }
+.folha-dnd .atributo-caixa{ box-shadow: inset 0 0 0 2px #d8c48f; }
+

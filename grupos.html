@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Meus Grupos — Fichas RPG</title>
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -53,7 +53,8 @@
 import {
   auth, db, onAuthStateChanged, signOut,
   doc, getDoc, setDoc, collection, addDoc, query, where, getDocs, serverTimestamp
-} from "./js/firebase-config.js";
+} from "./firebase-config.js";
+import { fichaVazia } from "./dnd-dados.js";
 
 const $ = (id) => document.getElementById(id);
 let usuarioAtual = null;
@@ -65,10 +66,7 @@ onAuthStateChanged(auth, async (user) => {
   carregarGrupos();
 });
 
-$("btn-sair").addEventListener("click", async () => {
-  await signOut(auth);
-  window.location.href = "index.html";
-});
+$("btn-sair").addEventListener("click", async () => { await signOut(auth); window.location.href = "index.html"; });
 
 function gerarCodigo() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -85,8 +83,7 @@ $("btn-criar").addEventListener("click", async () => {
   try {
     const codigo = gerarCodigo();
     const novoGrupo = await addDoc(collection(db, "grupos"), {
-      nome,
-      codigo,
+      nome, codigo,
       mestreId: usuarioAtual.uid,
       mestreNome: usuarioAtual.displayName || usuarioAtual.email,
       criadoEm: serverTimestamp()
@@ -123,8 +120,8 @@ $("btn-entrar").addEventListener("click", async () => {
         papel: "jogador",
         entrouEm: serverTimestamp()
       });
-      // cria a ficha vazia do personagem para esse jogador
-      await setDoc(doc(db, "grupos", grupoDoc.id, "fichas", usuarioAtual.uid), fichaVazia(usuarioAtual.displayName || usuarioAtual.email));
+      await setDoc(doc(db, "grupos", grupoDoc.id, "fichas", usuarioAtual.uid),
+        fichaVazia(usuarioAtual.displayName || usuarioAtual.email));
     }
 
     $("codigo-entrar").value = "";
@@ -134,35 +131,17 @@ $("btn-entrar").addEventListener("click", async () => {
   }
 });
 
-function fichaVazia(nome) {
-  return {
-    nome,
-    classe: "",
-    nivel: 1,
-    pv: 10, pvMax: 10,
-    pm: 0, pmMax: 0,
-    atributos: { forca: 10, destreza: 10, constituicao: 10, inteligencia: 10, sabedoria: 10, carisma: 10 },
-    anotacoes: "",
-    inventario: []
-  };
-}
-
 async function carregarGrupos() {
   const lista = $("lista-grupos");
   lista.innerHTML = '<div class="empty">Carregando grupos...</div>';
 
-  // busca todos os grupos e filtra os que o usuário é membro
-  // (abordagem simples: consulta a subcoleção membros de cada grupo é cara;
-  // por isso mantemos também uma coleção espelho "minhasParticipacoes")
   const q = query(collection(db, "grupos"));
   const snap = await getDocs(q);
 
   const grupos = [];
   for (const g of snap.docs) {
     const membroSnap = await getDoc(doc(db, "grupos", g.id, "membros", usuarioAtual.uid));
-    if (membroSnap.exists()) {
-      grupos.push({ id: g.id, ...g.data(), papel: membroSnap.data().papel });
-    }
+    if (membroSnap.exists()) grupos.push({ id: g.id, ...g.data(), papel: membroSnap.data().papel });
   }
 
   if (grupos.length === 0) {
@@ -190,11 +169,7 @@ async function carregarGrupos() {
   });
 }
 
-function escapeHtml(str) {
-  const d = document.createElement("div");
-  d.textContent = str ?? "";
-  return d.innerHTML;
-}
+function escapeHtml(str) { const d = document.createElement("div"); d.textContent = str ?? ""; return d.innerHTML; }
 </script>
 
 </body>
