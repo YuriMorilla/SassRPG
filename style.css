@@ -38,9 +38,25 @@ a{ color: var(--gold); }
   display:flex; align-items:center; justify-content:space-between;
   padding: 14px 20px; border-bottom: 1px solid var(--border);
   background: rgba(20,16,13,.7);
+  flex-wrap: wrap; gap: 8px;
 }
 .topbar .brand{ font-family: var(--font-display); font-size:1.2rem; letter-spacing:.04em; color: var(--gold); }
-.topbar .userinfo{ font-size:.85rem; color: var(--ink-dim); display:flex; gap:14px; align-items:center; }
+.topbar .userinfo{ font-size:.85rem; color: var(--ink-dim); display:flex; gap:14px; align-items:center; flex-wrap: wrap; }
+
+@media (max-width: 520px){
+  .wrap{ padding: 18px 12px 60px; }
+  .panel{ padding: 14px; }
+  .topbar{ padding: 10px 12px; }
+  h1{ font-size: 1.35rem; }
+  table{ display:block; overflow-x:auto; white-space:nowrap; }
+  .folha-dnd{ padding: 14px; }
+  .ficha-cabecalho{ padding: 12px; }
+  .ficha-cabecalho .nome-personagem{ font-size: 1.25rem; }
+  .atributo-caixa{ padding: 10px 8px; }
+  .atributo-caixa .mod{ font-size: 1.3rem; }
+  .linha-check{ font-size: .82rem; }
+  .tab{ padding: 8px 10px; font-size: .8rem; }
+}
 
 .panel{
   background: var(--panel);
@@ -56,6 +72,7 @@ a{ color: var(--gold); }
 .grid-4{ grid-template-columns: repeat(4, 1fr); }
 .grid-6{ grid-template-columns: repeat(6, 1fr); }
 @media (max-width: 800px){ .grid-2, .grid-3, .grid-4, .grid-6{ grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 520px){ .grid-2, .grid-3, .grid-4, .grid-6{ grid-template-columns: 1fr; } }
 
 label{ display:block; font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color: var(--ink-dim); margin-bottom:4px; }
 
@@ -182,6 +199,8 @@ th{ color: var(--ink-dim); font-weight:600; font-size:.75rem; text-transform:upp
 
 .morte-marcas{ display:flex; gap:8px; }
 .morte-marcas input[type=checkbox]{ width:16px; height:16px; accent-color: var(--blood-bright); }
+
+.grid-mini-3{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
 .ataque-linha{ display:grid; grid-template-columns: 2fr 1fr 1.5fr auto; gap:8px; align-items:center; margin-bottom:8px; }
 @media (max-width: 700px){ .ataque-linha{ grid-template-columns: 1fr; } }
